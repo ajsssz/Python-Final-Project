@@ -1,160 +1,75 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+# Import necessary libraries
+import requests
+import re
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import os
+import subprocess
 
-# C extensions
-*.so
+# Function to fetch trending repositories from GitHub API
+def fetch_trending_repositories(language='python', since='weekly'):
+    url = f'https://api.github.com/search/repositories?q=language:{language}&sort=stars&order=desc&since={since}'
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        return response.json()['items']
+    else:
+        print(f"Failed to fetch data. Status code: {response.status_code}")
+        return []
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+# Function to analyze repository data
+def analyze_repositories(repositories):
+    if not repositories:
+        print("No data to analyze.")
+        return
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+    # Extract relevant information
+    repo_names = [repo['name'] for repo in repositories]
+    stars = [repo['stargazers_count'] for repo in repositories]
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+    # Basic analysis using Pandas/Numpy
+    df = pd.DataFrame({'Repository': repo_names, 'Stars': stars})
+    mean_stars = np.mean(df['Stars'])
+    max_stars_repo = df.loc[df['Stars'].idxmax()]['Repository']
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
+    print(f"Average stars: {mean_stars}")
+    print(f"Repository with the most stars: {max_stars_repo}")
 
-# Translations
-*.mo
-*.pot
+    # Plotting using Matplotlib
+    plt.figure(figsize=(10, 6))
+    plt.barh(repo_names, stars, color='skyblue')
+    plt.xlabel('Stars')
+    plt.title('Trending GitHub Repositories')
+    plt.show()
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
+# Function to perform advanced string operations
+def advanced_string_operations(repo_names):
+    # Example: Find repositories with names containing 'python'
+    python_repos = [repo for repo in repo_names if re.search(r'python', repo, re.I)]
+    print(f"Repositories with 'python' in their name: {python_repos}")
 
-# Flask stuff:
-instance/
-.webassets-cache
+# Function to initialize Git repository and make initial commit
+def initialize_git_repository():
+    if not os.path.exists('.git'):
+        subprocess.run(['git', 'init'])
+        subprocess.run(['git', 'add', '.'])
+        subprocess.run(['git', 'commit', '-m', 'Initial commit'])
 
-# Scrapy stuff:
-.scrapy
+# Main function
+def main():
+    # Step 1: Fetch trending repositories
+    repositories = fetch_trending_repositories()
 
-# Sphinx documentation
-docs/_build/
+    # Step 2: Perform analysis
+    analyze_repositories(repositories)
 
-# PyBuilder
-.pybuilder/
-target/
+    # Step 3: Perform advanced string operations
+    repo_names = [repo['name'] for repo in repositories]
+    advanced_string_operations(repo_names)
 
-# Jupyter Notebook
-.ipynb_checkpoints
+    # Step 4: Initialize Git repository and make initial commit
+    initialize_git_repository()
 
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
-
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
-
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-#poetry.lock
-
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#pdm.lock
-#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
-#   in version control.
-#   https://pdm.fming.dev/#use-with-ide
-.pdm.toml
-
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+if __name__ == "__main__":
+    main()
